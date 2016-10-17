@@ -1,14 +1,8 @@
-## ---- echo=FALSE---------------------------------------------------------
-if (!requireNamespace("plotly", quietly = TRUE)) {
-  stop("plotly needed for this vignette to build.",
-    call. = FALSE)
-}
-
 ## ---- message=FALSE------------------------------------------------------
+library(devtools)
 devtools::load_all() # in your script: library(recexcavAAR)
 library(kriging)
-library(magrittr)
-library(plotly)
+library(rgl)
 
 ## ------------------------------------------------------------------------
 edges <- data.frame(
@@ -17,38 +11,41 @@ edges <- data.frame(
   z = c(9.7, 9.7, 9.7, 9.7, 8.3, 8.3, 8.3, 8.3)
 )
 
-## ----fig.width=7, fig.height=5-------------------------------------------
+## ------------------------------------------------------------------------
 rangex <- abs(max(edges$x) - min(edges$x))
 rangey <- abs(max(edges$y) - min(edges$y))
 
-vis <- plot_ly(
-    data = rbind(
-      edges[1:4, ], 
-      edges[1, ], 
-      edges[5:8, ], 
-      edges[5, ],
-      edges[c(6,2), ],
-      edges[c(3,7), ],
-      edges[c(8,4), ]
-    ),
-    x = x, y = y, z = z,
-    mode = "lines", type = "scatter3d",
-    line = list(size = 5, color = "black")
-  ) %>% 
-  layout(
-    showlegend = FALSE,
-    autorange = F, 
-    aspectmode = 'manual', 
-    scene = list(
-      dragmode = "orbit",
-      aspectratio = list(x = rangex, y = rangey, z = 5),
-      camera = list(
-        eye = list(x = -9, y = 9, z = 11) 
-      )
-    )
-  ) 
+edgesordered = rbind(
+  edges[1:4, ], 
+  edges[1, ], 
+  edges[5:8, ], 
+  edges[5, ],
+  edges[c(6,2), ],
+  edges[c(3,7), ],
+  edges[c(8,4), ]
+)
 
-vis
+## ------------------------------------------------------------------------
+# avoid plotting in X11 window
+open3d(useNULL = TRUE)
+
+## ----fig.width=7, fig.height=5-------------------------------------------
+plot3d(
+  edgesordered$x, edgesordered$y, edgesordered$z,
+  type="l",
+  aspect = c(rangex, rangey, 5),
+  xlab = "x", ylab = "y", zlab = "z",
+  sub = "Grab me and rotate me!",
+  col = "darkgreen"
+)
+
+bbox3d(
+  xat = c(2, 4, 6, 8, 10),
+  yat = c(10, 12, 14, 16, 18),
+  zat = c(8.5, 9, 9.5)
+)
+
+rglwidget()
 
 ## ------------------------------------------------------------------------
 sp <- KT_spits
@@ -69,27 +66,22 @@ for (i in 1:length(maps)) {
   surf[[i]] <- spatialwide(maps[[i]]$x, maps[[i]]$y, maps[[i]]$pred, digits = 3)
 }
 
-vis %>% 
-  add_trace(
-    x = surf[[1]]$x, y = surf[[1]]$y, z = surf[[1]]$z, type = "surface", 
-    showscale = FALSE, opacity = 0.9, hoverinfo = "none"
-  ) %>%
-  add_trace(
-    x = surf[[2]]$x, y = surf[[2]]$y, z = surf[[2]]$z, type = "surface", 
-    showscale = FALSE, opacity = 0.9, hoverinfo = "none"
-  ) %>%
-  add_trace(
-    x = surf[[3]]$x, y = surf[[3]]$y, z = surf[[3]]$z, type = "surface", 
-    showscale = FALSE, opacity = 0.9, hoverinfo = "none"
-  ) %>%
-  add_trace(
-    x = surf[[4]]$x, y = surf[[4]]$y, z = surf[[4]]$z, type = "surface", 
-    showscale = FALSE, opacity = 0.9, hoverinfo = "none"
-  ) %>%
-  add_trace(
-    x = surf[[5]]$x, y = surf[[5]]$y, z = surf[[5]]$z, type = "surface", 
-    showscale = FALSE, opacity = 0.9, hoverinfo = "none"
-  ) 
+idvec <- c()
+for (i in 1:length(surf)) {
+  idvec[i] <- surface3d(
+    surf[[i]]$x, surf[[i]]$y, t(surf[[i]]$z),
+    color = c("black", "white"),
+    alpha = 0.5,
+    add = TRUE
+  )
+}
+
+rglwidget()
+
+# remove surfaces from plot
+for (i in 1:length(idvec)) {
+  rgl.pop(id = idvec[i])
+}
 
 ## ----fig.width=7, fig.height=5-------------------------------------------
 for (i in 1:length(maps)) {
@@ -102,47 +94,29 @@ for (i in 1:length(maps)) {
   surf2[[i]] <- recexcavAAR::spatialwide(maps[[i]]$x, maps[[i]]$y, maps[[i]]$pred, 3)
 }
 
-vis2 <- vis %>% 
-  add_trace(
-    x = surf2[[1]]$x, y = surf2[[1]]$y, z = surf2[[1]]$z, type = "surface", 
-    showscale = FALSE, opacity = 0.9, hoverinfo = "none"
-  ) %>%
-  add_trace(
-    x = surf2[[2]]$x, y = surf2[[2]]$y, z = surf2[[2]]$z, type = "surface", 
-    showscale = FALSE, opacity = 0.9, hoverinfo = "none"
-  ) %>%
-  add_trace(
-    x = surf2[[3]]$x, y = surf2[[3]]$y, z = surf2[[3]]$z, type = "surface", 
-    showscale = FALSE, opacity = 0.9, hoverinfo = "none"
-  ) %>%
-  add_trace(
-    x = surf2[[4]]$x, y = surf2[[4]]$y, z = surf2[[4]]$z, type = "surface", 
-    showscale = FALSE, opacity = 0.9, hoverinfo = "none"
-  ) %>%
-  add_trace(
-    x = surf2[[5]]$x, y = surf2[[5]]$y, z = surf2[[5]]$z, type = "surface", 
-    showscale = FALSE, opacity = 0.9, hoverinfo = "none"
-  ) 
+for (i in 1:length(surf)) {
+  surface3d(
+    surf2[[i]]$x, surf2[[i]]$y, t(surf2[[i]]$z),
+    color = c("black", "white"),
+    alpha = 0.5,
+    add = TRUE
+  )
+}
 
-vis2
+rglwidget()
 
 ## ----fig.width=7, fig.height=5-------------------------------------------
 ve <- KT_vessel
 vesselsingle <- ve[grep("KTF", ve$inv), ]
 
-vis <- vis %>% 
-  add_trace(
-    data = vesselsingle, x = x, y = y, z = z, 
-    mode = "markers", type = "scatter3d",
-    marker = list(size = 3, color = "red"),
-    hoverinfo = "text",
-    text = paste(
-      "SING: ", "inv = ", inv, "; spit = ", spit ,"; square = ", square, "; feature = ", feature,
-      sep = ""
-    )
-  )
+points3d(
+  vesselsingle$x, vesselsingle$y, vesselsingle$z,
+  col = "red",
+  size = 8, 
+  add = TRUE
+)
 
-vis
+rglwidget()
 
 ## ------------------------------------------------------------------------
 vesselmass <- ve[grep("KTM", ve$inv), ]
@@ -178,27 +152,28 @@ for (i in 1:length(sqcenters)) {
 sqcdf <- do.call(rbind.data.frame, sqcenters)
 
 ## ----fig.width=7, fig.height=5-------------------------------------------
-vis2 %>%
-  add_trace(
-    data = sqcdf, x = x, y = y, z = z,
-    mode = "markers", type = "scatter3d",
-    marker = list(size = 2, color = "green")
-  )
+completeraster <- points3d(
+  sqcdf$x, sqcdf$y, sqcdf$z,
+  col = "darkgreen",
+  add = TRUE
+)
+
+rglwidget()
+
+# remove point raster from plot
+rgl.pop(id = completeraster)
 
 ## ----fig.width=7, fig.height=5, warning=FALSE----------------------------
 vmsq <- merge(vesselmass[, 1:4], sqcdf, by = c("square", "spit"), all.x = TRUE)
 
 vesselm <- vmsq[complete.cases(vmsq), ]
 
-vis %>%
-  add_trace(
-    data = vesselm, x = x, y = y, z = z,
-    mode = "markers", type = "scatter3d",
-    marker = list(size = 3, color = "orange"),
-    hoverinfo = "text",
-    text = paste(
-      "MASS: ", "inv = ", inv, "; spit = ", spit ,"; square = ", square, "; feature = ", feature,
-      sep = ""
-    )
-  )
+points3d(
+  vesselm$x, vesselm$y, vesselm$z,
+  col = "orange",
+  size = 8, 
+  add = TRUE
+)
+
+rglwidget()
 
