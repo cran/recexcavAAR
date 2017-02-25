@@ -1,6 +1,12 @@
+## ---- echo=FALSE---------------------------------------------------------
+# check if pandoc is available
+if (requireNamespace("rmarkdown") && !rmarkdown::pandoc_available("1.13.1"))
+stop("These vignettes assume pandoc version 1.13.1; older versions will not work.")
+# see https://r-forge.r-project.org/forum/message.php?msg_id=43797&group_id=234
+
 ## ---- message=FALSE------------------------------------------------------
 library(devtools)
-devtools::load_all() # in your script: library(recexcavAAR)
+library(recexcavAAR)
 library(dplyr)
 library(kriging)
 library(magrittr)
@@ -13,11 +19,11 @@ edges <- data.frame(
   z = c(0, 0, 2, 2, 0, 0, 2, 2)
 )
 
-## ------------------------------------------------------------------------
+## ---- echo=FALSE, results="hide"-----------------------------------------
 # avoid plotting in X11 window
 open3d(useNULL = TRUE)
 
-## ----fig.width=7, fig.height=5-------------------------------------------
+## ------------------------------------------------------------------------
 plot3d(
   edges$x, edges$y, edges$z,
   type="s",
@@ -29,9 +35,11 @@ plot3d(
 bbox3d(
   xat = c(0, 1, 2, 3),
   yat = c(0, 0.5, 1),
-  zat = c(0, 0.5, 1, 1.5, 2)
+  zat = c(0, 0.5, 1, 1.5, 2),
+  back = "lines"
 )
 
+## ---- echo=FALSE, fig.width=7, fig.height=5------------------------------
 rglwidget()
 
 ## ------------------------------------------------------------------------
@@ -47,7 +55,7 @@ df2 <- data.frame(
   z = c(seq(0.65, 0.9, 0.05), 0.6+0.05*rnorm(14), 1.0+0.05*rnorm(14), seq(0.65, 0.9, 0.05))
 )
 
-## ----fig.width=7, fig.height=5-------------------------------------------
+## ------------------------------------------------------------------------
 points3d(
   df1$x, df1$y, df1$z,
   col = "darkgreen",
@@ -60,6 +68,7 @@ points3d(
   add = TRUE
 )
 
+## ---- echo=FALSE, fig.width=7, fig.height=5------------------------------
 rglwidget()
 
 ## ------------------------------------------------------------------------
@@ -71,7 +80,7 @@ maps <- kriglist(lpoints, lags = 3, model = "spherical", pixels = 30)
 surf1 <- spatialwide(maps[[1]]$x, maps[[1]]$y, maps[[1]]$pred, 3)
 surf2 <- spatialwide(maps[[2]]$x, maps[[2]]$y, maps[[2]]$pred, 3)
 
-## ----fig.width=7, fig.height=5-------------------------------------------
+## ------------------------------------------------------------------------
 surface3d(
   surf1$x, surf1$y, t(surf1$z),
   color = c("black", "white"),
@@ -86,6 +95,7 @@ surface3d(
   add = TRUE
 )
 
+## ---- echo=FALSE, fig.width=7, fig.height=5------------------------------
 rglwidget()
 
 ## ----fig.width=7, fig.height=5-------------------------------------------
@@ -98,19 +108,21 @@ hexatestdf <- data.frame(
 ## ------------------------------------------------------------------------
 cx = fillhexa(hexatestdf, 0.1)
 
-## ----fig.width=7, fig.height=5-------------------------------------------
+## ------------------------------------------------------------------------
 completeraster <- points3d(
   cx$x, cx$y, cx$z,
   col = "red",
   add = TRUE
 )
 
+
+## ---- echo=FALSE, fig.width=7, fig.height=5------------------------------
 rglwidget()
 
 # remove point raster from plot
 rgl.pop(id = completeraster)
 
-## ----fig.width=7, fig.height=5-------------------------------------------
+## ------------------------------------------------------------------------
 cuberasterlist <- list(cx)
 
 crlist <- posdeclist(cuberasterlist, maps)
@@ -150,6 +162,7 @@ points3d(
   add = TRUE
 )
 
+## ---- echo=FALSE, fig.width=7, fig.height=5------------------------------
 rglwidget()
 
 ## ------------------------------------------------------------------------

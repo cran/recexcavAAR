@@ -1,6 +1,12 @@
+## ---- echo=FALSE---------------------------------------------------------
+# check if pandoc is available
+if (requireNamespace("rmarkdown") && !rmarkdown::pandoc_available("1.13.1"))
+stop("These vignettes assume pandoc version 1.13.1; older versions will not work.")
+# see https://r-forge.r-project.org/forum/message.php?msg_id=43797&group_id=234
+
 ## ---- message=FALSE------------------------------------------------------
 library(devtools)
-devtools::load_all() # in your script: library(recexcavAAR)
+library(recexcavAAR)
 library(kriging)
 library(rgl)
 
@@ -25,11 +31,11 @@ edgesordered = rbind(
   edges[c(8,4), ]
 )
 
-## ------------------------------------------------------------------------
+## ---- echo=FALSE, results="hide"-----------------------------------------
 # avoid plotting in X11 window
 open3d(useNULL = TRUE)
 
-## ----fig.width=7, fig.height=5-------------------------------------------
+## ------------------------------------------------------------------------
 plot3d(
   edgesordered$x, edgesordered$y, edgesordered$z,
   type="l",
@@ -42,9 +48,11 @@ plot3d(
 bbox3d(
   xat = c(2, 4, 6, 8, 10),
   yat = c(10, 12, 14, 16, 18),
-  zat = c(8.5, 9, 9.5)
+  zat = c(8.5, 9, 9.5),
+  back = "lines"
 )
 
+## ---- echo=FALSE, fig.width=7, fig.height=5------------------------------
 rglwidget()
 
 ## ------------------------------------------------------------------------
@@ -57,9 +65,9 @@ for (i in 1:length(spitnames)){
   splist[[i]] <- sp[grep(spitnames[i], sp$id), ]
 }
 
-## ----fig.width=7, fig.height=5-------------------------------------------
+## ------------------------------------------------------------------------
 # I had to choose a very low pixel value to keep the vignette small enough 
-maps <- kriglist(splist, x = 2, y = 3, z = 4, lags = 3, model = "spherical", pixels = 20)
+maps <- kriglist(splist, x = 2, y = 3, z = 4, lags = 3, model = "spherical", pixels = 30)
 
 surf <- list()
 for (i in 1:length(maps)) {
@@ -76,14 +84,16 @@ for (i in 1:length(surf)) {
   )
 }
 
+## ---- echo=FALSE, fig.width=7, fig.height=5------------------------------
 rglwidget()
 
+## ------------------------------------------------------------------------
 # remove surfaces from plot
 for (i in 1:length(idvec)) {
   rgl.pop(id = idvec[i])
 }
 
-## ----fig.width=7, fig.height=5-------------------------------------------
+## ------------------------------------------------------------------------
 for (i in 1:length(maps)) {
   rem <- recexcavAAR::pnpmulti(edges$x[1:4], edges$y[1:4], maps[[i]]$x, maps[[i]]$y)
   maps[[i]] <- maps[[i]][rem, ]
@@ -103,9 +113,10 @@ for (i in 1:length(surf)) {
   )
 }
 
+## ---- echo=FALSE, fig.width=7, fig.height=5------------------------------
 rglwidget()
 
-## ----fig.width=7, fig.height=5-------------------------------------------
+## ------------------------------------------------------------------------
 ve <- KT_vessel
 vesselsingle <- ve[grep("KTF", ve$inv), ]
 
@@ -116,6 +127,7 @@ points3d(
   add = TRUE
 )
 
+## ---- echo=FALSE, fig.width=7, fig.height=5------------------------------
 rglwidget()
 
 ## ------------------------------------------------------------------------
@@ -151,19 +163,21 @@ for (i in 1:length(sqcenters)) {
 
 sqcdf <- do.call(rbind.data.frame, sqcenters)
 
-## ----fig.width=7, fig.height=5-------------------------------------------
+## ------------------------------------------------------------------------
 completeraster <- points3d(
   sqcdf$x, sqcdf$y, sqcdf$z,
   col = "darkgreen",
   add = TRUE
 )
 
+## ---- echo=FALSE, fig.width=7, fig.height=5------------------------------
 rglwidget()
 
+## ------------------------------------------------------------------------
 # remove point raster from plot
 rgl.pop(id = completeraster)
 
-## ----fig.width=7, fig.height=5, warning=FALSE----------------------------
+## ----warning=FALSE-------------------------------------------------------
 vmsq <- merge(vesselmass[, 1:4], sqcdf, by = c("square", "spit"), all.x = TRUE)
 
 vesselm <- vmsq[complete.cases(vmsq), ]
@@ -175,5 +189,6 @@ points3d(
   add = TRUE
 )
 
+## ---- echo=FALSE, fig.width=7, fig.height=5------------------------------
 rglwidget()
 
